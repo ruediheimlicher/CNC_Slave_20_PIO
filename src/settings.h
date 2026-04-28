@@ -9,7 +9,7 @@
 #ifndef settings_h
 #define settings_h
 
-#define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
+
 
 #define USB_DATENBREITE 32
 
