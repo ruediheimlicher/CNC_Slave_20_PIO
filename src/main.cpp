@@ -16,6 +16,7 @@
 #include "settings.h"
 #include "lcd.h"
 #include "bresenham.h"
+#include "adc.c"
 
 
 elapsedMillis msUntilNextSend;
@@ -1013,11 +1014,54 @@ void slaveinit(void)
    CMD_PORT |= (1<<STROM);                   // HI
 }
 
+void timer2 (uint8_t wert) 
+{
+    //timer2
+   TCNT2   = 0; 
+   //   TCCR2A |= (1 << WGM21);    // Configure timer 2 for CTC mode 
+   TCCR2B |= (1 << CS20);     // Start timer at Fcpu/8 
+   //   TIMSK2 |= (1 << OCIE2A);   // Enable CTC interrupt 
+   TIMSK2 |= (1 << TOIE2);    // Enable OV interrupt 
+   //OCR2A   = 5;             // Set CTC compare value with a prescaler of 64 
+   TCCR2A = 0x00;
+
+}
+
+
 void setup() 
 {
   // put your setup code here, to run once:
   pinMode(6, OUTPUT);
   digitalWrite(6, HIGH);
+
+  // von TWI_Slave
+
+  uint16_t count=0;
+    
+   // set for 16 MHz clock
+   CPU_PRESCALE(0);
+   slaveinit();
+   lcd_initialize(LCD_FUNCTION_8x2, LCD_CMD_ENTRY_INC, LCD_CMD_ON);
+   lcd_puts("Guten Tag\0");
+   _delay_ms(1000);
+   lcd_cls();
+  uint8_t Tastenwert=0;
+   uint8_t TastaturCount=0;
+   
+   uint16_t TastenStatus=0;
+   uint16_t Tastencount=0;
+   uint16_t Tastenprellen=0x01F;
+
+   uint16_t loopcount0=0;
+   uint8_t loopcount1=0;
+   
+   initADC(1);
+
+  timer2(4);
+
+
+// end TWI_Slave
+
 
 }
 
@@ -1039,7 +1083,7 @@ void loop()
     sendbuffer[16] = 0xBD; // set the first byte to 0, so we can see if the computer changes it
   // put your main code here, to run repeatedly:
 }
-  if (msUntilNextSend > 200) 
+  if (msUntilNextSend > 400) 
   {
     digitalWrite(6, !digitalRead(6)); // toggle pin 6 so we can see when we send a packet
     // it's time to send a packet to the computer.  Fill
